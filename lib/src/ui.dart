@@ -281,6 +281,21 @@ class NetworkLoggerScreen extends StatelessWidget {
         .toList();
   }
 
+  Color getColor(String method) {
+    switch (method.toUpperCase()) {
+      case "GET":
+        return Colors.blue;
+      case "POST":
+        return Colors.green;
+      case "PUT":
+        return Colors.deepOrange;
+      case "DELETE":
+        return Colors.red;
+      default:
+        return Colors.black;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -326,35 +341,125 @@ class NetworkLoggerScreen extends StatelessWidget {
                   itemCount: events.length,
                   itemBuilder: enumerateItems<NetworkEvent>(
                     events,
-                    (context, item) => ListTile(
-                      key: ValueKey(item.request),
-                      title: Text(
-                        item.request!.method,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        item.request!.uri.toString(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      leading: Icon(
-                        item.error == null
-                            ? (item.response == null
-                                ? Icons.hourglass_empty
-                                : Icons.done)
-                            : Icons.error,
-                      ),
-                      trailing: _AutoUpdate(
-                        duration: Duration(seconds: 1),
-                        builder: (context) =>
-                            Text(_timeDifference(item.timestamp!)),
-                      ),
-                      onTap: () => NetworkLoggerEventScreen.open(
-                        context,
-                        item,
-                        eventList,
-                      ),
-                    ),
+                    (context, item) {
+                      return InkWell(
+                        key: ValueKey(item.request),
+                        onTap: () => NetworkLoggerEventScreen.open(
+                          context,
+                          item,
+                          eventList,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 5,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: getColor(
+                                                    item.request?.method ?? "")
+                                                .withOpacity(.5),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                            vertical: 2,
+                                          ),
+                                          margin:
+                                              const EdgeInsets.only(right: 10),
+                                          child: Text(
+                                            item.request?.method ?? "",
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            item.request?.data.toString() ?? "",
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      item.request?.uri ?? "",
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      item.timestamp?.toIso8601String() ?? "",
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: item.error == null
+                                      ? (item.response == null)
+                                          ? Colors.orange
+                                          : Colors.green
+                                      : Colors.red,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+
+                      // return ListTile(
+                      //   key: ValueKey(item.request),
+                      //   title: Text(
+                      //     item.request!.method,
+                      //     style: TextStyle(fontWeight: FontWeight.bold),
+                      //   ),
+                      //   subtitle: Text(
+                      //     item.request!.uri.toString(),
+                      //     maxLines: 1,
+                      //     overflow: TextOverflow.ellipsis,
+                      //   ),
+                      //   leading: Icon(
+                      //     item.error == null
+                      //         ? (item.response == null
+                      //             ? Icons.hourglass_empty
+                      //             : Icons.done)
+                      //         : Icons.error,
+                      //   ),
+                      //   trailing: _AutoUpdate(
+                      //     duration: Duration(seconds: 1),
+                      //     builder: (context) =>
+                      //         Text(_timeDifference(item.timestamp!)),
+                      //   ),
+                      //   onTap: () => NetworkLoggerEventScreen.open(
+                      //     context,
+                      //     item,
+                      //     eventList,
+                      //   ),
+                      // );
+                    },
                   ),
                 ),
               )
