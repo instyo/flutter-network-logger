@@ -59,12 +59,13 @@ class DioNetworkLogger extends dio.Interceptor {
 
 extension _RequestOptionsX on dio.RequestOptions {
   Request toRequest() => Request(
+        baseUrl: baseUrl,
         uri: uri.toString(),
+        path: path,
+        queryParameters: queryParameters,
         data: data,
         method: method,
-        headers: Headers(headers.entries.map(
-          (kv) => MapEntry(kv.key, '${kv.value}'),
-        )),
+        headers: headers,
       );
 }
 
@@ -83,5 +84,10 @@ extension _ResponseX on dio.Response {
 }
 
 extension _DioErrorX on dio.DioError {
-  NetworkError toNetworkError() => NetworkError(message: toString());
+  NetworkError toNetworkError() => NetworkError(
+        message: message,
+        data: response?.data,
+        statusCode: response?.statusCode ?? 0,
+        statusMessage: response?.statusMessage ?? "",
+      );
 }

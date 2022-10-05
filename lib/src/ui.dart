@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'enumerate_items.dart';
 import 'network_event.dart';
 import 'network_logger.dart';
+import 'ui_detail.dart';
 
 /// Overlay for [NetworkLoggerButton].
 class NetworkLoggerOverlay extends StatefulWidget {
@@ -284,11 +285,11 @@ class NetworkLoggerScreen extends StatelessWidget {
   Color getColor(String method) {
     switch (method.toUpperCase()) {
       case "GET":
-        return Colors.blue;
-      case "POST":
         return Colors.green;
+      case "POST":
+        return Colors.orange;
       case "PUT":
-        return Colors.deepOrange;
+        return Colors.deepPurple;
       case "DELETE":
         return Colors.red;
       default:
@@ -344,7 +345,7 @@ class NetworkLoggerScreen extends StatelessWidget {
                     (context, item) {
                       return InkWell(
                         key: ValueKey(item.request),
-                        onTap: () => NetworkLoggerEventScreen.open(
+                        onTap: () => UIDetail.open(
                           context,
                           item,
                           eventList,
@@ -384,7 +385,7 @@ class NetworkLoggerScreen extends StatelessWidget {
                                         ),
                                         Expanded(
                                           child: Text(
-                                            item.request?.data.toString() ?? "",
+                                            item.request?.path ?? "",
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
@@ -395,7 +396,7 @@ class NetworkLoggerScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 5),
                                     Text(
-                                      item.request?.uri ?? "",
+                                      item.request?.baseUrl ?? "",
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.black54,
@@ -403,7 +404,7 @@ class NetworkLoggerScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 5),
                                     Text(
-                                      item.timestamp?.toIso8601String() ?? "",
+                                      item.dateFormat,
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.black54,
@@ -420,7 +421,7 @@ class NetworkLoggerScreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   color: item.error == null
                                       ? (item.response == null)
-                                          ? Colors.orange
+                                          ? Colors.grey
                                           : Colors.green
                                       : Colors.red,
                                 ),
@@ -429,36 +430,6 @@ class NetworkLoggerScreen extends StatelessWidget {
                           ),
                         ),
                       );
-
-                      // return ListTile(
-                      //   key: ValueKey(item.request),
-                      //   title: Text(
-                      //     item.request!.method,
-                      //     style: TextStyle(fontWeight: FontWeight.bold),
-                      //   ),
-                      //   subtitle: Text(
-                      //     item.request!.uri.toString(),
-                      //     maxLines: 1,
-                      //     overflow: TextOverflow.ellipsis,
-                      //   ),
-                      //   leading: Icon(
-                      //     item.error == null
-                      //         ? (item.response == null
-                      //             ? Icons.hourglass_empty
-                      //             : Icons.done)
-                      //         : Icons.error,
-                      //   ),
-                      //   trailing: _AutoUpdate(
-                      //     duration: Duration(seconds: 1),
-                      //     builder: (context) =>
-                      //         Text(_timeDifference(item.timestamp!)),
-                      //   ),
-                      //   onTap: () => NetworkLoggerEventScreen.open(
-                      //     context,
-                      //     item,
-                      //     eventList,
-                      //   ),
-                      // );
                     },
                   ),
                 ),
@@ -468,18 +439,6 @@ class NetworkLoggerScreen extends StatelessWidget {
         },
       ),
     );
-  }
-}
-
-String _timeDifference(DateTime time, [DateTime? origin]) {
-  origin ??= DateTime.now();
-  var delta = origin.difference(time);
-  if (delta.inSeconds < 90) {
-    return '${delta.inSeconds} s';
-  } else if (delta.inMinutes < 90) {
-    return '${delta.inMinutes} m';
-  } else {
-    return '${delta.inHours} h';
   }
 }
 
@@ -608,13 +567,13 @@ class NetworkLoggerEventScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(event.timestamp.toString()),
         ),
-        if (event.request!.headers.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(15, 10, 15, 5),
-            child: Text('HEADERS', style: Theme.of(context).textTheme.caption),
-          ),
-          buildHeadersViewer(context, event.request!.headers.entries),
-        ],
+        // if (event.request!.headers.isNotEmpty) ...[
+        //   Padding(
+        //     padding: const EdgeInsets.fromLTRB(15, 10, 15, 5),
+        //     child: Text('HEADERS', style: Theme.of(context).textTheme.caption),
+        //   ),
+        //   buildHeadersViewer(context, event.request!.headers.entries),
+        // ],
         if (event.error != null) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(15, 10, 15, 5),

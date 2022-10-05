@@ -1,4 +1,9 @@
+import 'package:intl/intl.dart';
+
 /// Network event log entry.
+
+enum LogNetworkStatus { loading, success, error }
+
 class NetworkEvent {
   NetworkEvent({this.request, this.response, this.error, this.timestamp});
   NetworkEvent.now({this.request, this.response, this.error})
@@ -8,6 +13,15 @@ class NetworkEvent {
   Response? response;
   NetworkError? error;
   DateTime? timestamp;
+
+  String get dateFormat =>
+      DateFormat("dd LLLL yyyy HH:mm:ss").format(timestamp ?? DateTime.now());
+
+  LogNetworkStatus get status => error != null
+      ? LogNetworkStatus.error
+      : response == null
+          ? LogNetworkStatus.loading
+          : LogNetworkStatus.success;
 }
 
 /// Used for storing [Request] and [Response] headers.
@@ -29,16 +43,32 @@ class Headers {
 /// Http request details.
 class Request {
   Request({
+    required this.baseUrl,
     required this.uri,
     required this.method,
-    required this.headers,
+    this.headers,
+    required this.path,
+    this.queryParameters,
     this.data,
   });
 
+  // final DateFormat dateFormat = DateFormat('yyyy-mm-dd HH:mm:ss');
+
+  // String get authorization => headers?['Authorization'] ?? '';
+
+  // String get date =>
+  //     dateFormat.format(DateTime.fromMillisecondsSinceEpoch(loggedAt));
+
+  final String baseUrl;
   final String uri;
   final String method;
-  final Headers headers;
+  final Map<String, dynamic>? headers;
   final dynamic data;
+  final String path;
+  final Map<String, dynamic>? queryParameters;
+
+  String get authorizationToken =>
+      (headers?["authorization"] != null) ? headers!["authorization"] : "";
 }
 
 /// Http response details.
@@ -58,9 +88,20 @@ class Response {
 
 /// Network error details.
 class NetworkError {
-  NetworkError({required this.message});
+  NetworkError({
+    required this.message,
+    required this.data,
+    required this.statusCode,
+    required this.statusMessage,
+  });
 
   final String message;
+
+  final dynamic data;
+
+  final int statusCode;
+
+  final String statusMessage;
 
   @override
   String toString() => message;
