@@ -3,16 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-
-import 'enumerate_items.dart';
 import 'network_event.dart';
 import 'network_logger.dart';
 
@@ -60,6 +55,9 @@ class _UIDetailState extends State<UIDetail>
   late PersistentBottomSheetController _bottomSheetController;
 
   String textCopy = "";
+  final _jsonEncoder = JsonEncoder.withIndent('   ');
+
+  dynamic encodeMap(dynamic data) => _jsonEncoder.convert(data);
 
   Color getColor(String method) {
     switch (method.toUpperCase()) {
@@ -80,17 +78,17 @@ class _UIDetailState extends State<UIDetail>
   void initState() {
     super.initState();
     textCopy = """
-Headers : \n
-${jsonEncode(widget.event.request?.headers)} \n
+Url : ${widget.event.request?.uri} \n
 
-Payload : \n
-${jsonEncode(widget.event.request?.data)} \n
+Method : ${widget.event.request?.method} \n
 
-Response : \n
-${jsonEncode(widget.event.response?.data)}
+${widget.event.request?.headers != null ? '\nHeaders : \n' + encodeMap(widget.event.request?.headers) : ''}
 
-Error : \n
-${jsonEncode(widget.event.error?.data)}
+${widget.event.request?.data != null ? '\nPayload : \n' + encodeMap(widget.event.request?.data) : ''}
+
+${widget.event.response != null ? '\nResponse : \n' + encodeMap(widget.event.response?.data) : ''}
+
+${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.data) : ''}
 
 """;
 
@@ -181,73 +179,75 @@ ${jsonEncode(widget.event.error?.data)}
           ],
         ),
         body: SizedBox.expand(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                ListTile(
-                  onTap: () async {
-                    await copyText(
-                      context,
-                      widget.event.request?.uri ?? "",
-                    );
-                  },
-                  leading: Container(
-                    decoration: BoxDecoration(
-                      color: getColor(widget.event.request?.method ?? "")
-                          .withOpacity(.5),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    child: Text(
-                      widget.event.request?.method ?? "",
-                      style: const TextStyle(color: Colors.white),
-                    ),
+          child: Column(
+            children: [
+              ListTile(
+                onTap: () async {
+                  await copyText(
+                    context,
+                    widget.event.request?.uri ?? "",
+                  );
+                },
+                leading: Container(
+                  decoration: BoxDecoration(
+                    color: getColor(widget.event.request?.method ?? "")
+                        .withOpacity(.5),
+                    borderRadius: BorderRadius.circular(5),
                   ),
-                  title: Text(
-                    widget.event.request?.uri ?? "-",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
                   ),
-                  trailing: widget.event.status == LogNetworkStatus.loading
-                      ? CupertinoActivityIndicator()
-                      : widget.event.status == LogNetworkStatus.success
-                          ? Icon(Icons.check)
-                          : Icon(Icons.close),
+                  child: Text(
+                    widget.event.request?.method ?? "",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
-                TabBar(
+                title: Text(
+                  widget.event.request?.uri ?? "-",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
+                ),
+                trailing: widget.event.status == LogNetworkStatus.loading
+                    ? CupertinoActivityIndicator()
+                    : widget.event.status == LogNetworkStatus.success
+                        ? Icon(
+                            Icons.circle,
+                            color: Colors.green,
+                            size: 18,
+                          )
+                        : Icon(
+                            Icons.circle,
+                            color: Colors.red,
+                            size: 18,
+                          ),
+              ),
+              TabBar(
+                controller: _tabController,
+                labelColor: Colors.black,
+                indicatorColor: Colors.black,
+                tabs: const [
+                  Tab(
+                    text: 'Request',
+                  ),
+                  Tab(
+                    text: 'Response',
+                  ),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
                   controller: _tabController,
-                  labelColor: Colors.black,
-                  indicatorColor: Colors.black,
-                  tabs: const [
-                    Tab(
-                      text: 'Request',
-                    ),
-                    Tab(
-                      text: 'Response',
-                    ),
-                  ],
-                ),
-                IndexedStack(
-                  index: _tabController.index,
                   children: [
-                    Visibility(
-                      visible: _index == 0,
-                      child: _buildRequestView(context),
-                    ),
-                    Visibility(
-                      visible: _index == 1,
-                      child: _buildResponse(),
-                    ),
+                    _buildRequestView(context),
+                    _buildResponse(),
                   ],
                 ),
-                const SizedBox(height: 20)
-              ],
-            ),
+              ),
+              const SizedBox(height: 20)
+            ],
           ),
         ),
       ),
@@ -341,7 +341,7 @@ ${jsonEncode(widget.event.error?.data)}
           onCopy: () async {
             await copyText(
               context,
-              jsonEncode(widget.event.request?.headers),
+              encodeMap(widget.event.request?.headers),
             );
           },
         ),
@@ -365,7 +365,7 @@ ${jsonEncode(widget.event.error?.data)}
           onCopy: () async {
             await copyText(
               context,
-              jsonEncode(widget.event.request?.data),
+              encodeMap(widget.event.request?.data),
             );
           },
         ),
@@ -420,7 +420,7 @@ ${jsonEncode(widget.event.error?.data)}
   }
 
   Widget _buildRequestView(BuildContext context) {
-    return Column(
+    return ListView(
       children: [
         _buildUrlInfo(),
         _buildHeaders(context),
@@ -449,8 +449,7 @@ ${jsonEncode(widget.event.error?.data)}
   }
 
   Widget _buildResponse() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
       children: [
         _buildData(),
       ],
@@ -491,7 +490,7 @@ ${jsonEncode(widget.event.error?.data)}
             : _buildActionTitle(
                 title: 'Data',
                 onCopy: () async {
-                  await copyText(context, jsonEncode(responseData));
+                  await copyText(context, encodeMap(responseData));
                 },
               ),
         responseData.isEmpty
@@ -527,7 +526,7 @@ ${jsonEncode(widget.event.error?.data)}
           onCopy: () async {
             await copyText(
               context,
-              jsonEncode(widget.event.error?.data),
+              encodeMap(widget.event.error?.data),
             );
           },
         ),
@@ -544,9 +543,9 @@ ${jsonEncode(widget.event.error?.data)}
 
 class FileSaver {
   static Future<String> get _localPath async {
-    final directory = await getExternalStorageDirectory();
+    final directory = await getApplicationDocumentsDirectory();
 
-    return directory?.path ?? "";
+    return directory.path;
   }
 
   static Future<File> writeFile(String filename, String content) async {
