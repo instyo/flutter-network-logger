@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'network_event.dart';
 import 'network_logger.dart';
@@ -159,7 +159,7 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
                                   action: SnackBarAction(
                                     label: "open",
                                     onPressed: () async {
-                                      await OpenFile.open(file.path);
+                                      await OpenFilex.open(file.path);
                                     },
                                   ),
                                 ),
