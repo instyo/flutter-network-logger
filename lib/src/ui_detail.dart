@@ -6,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
-import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'network_event.dart';
 import 'network_logger.dart';
@@ -144,29 +143,6 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
                             },
                             title: Text("Copy as text"),
                             trailing: Icon(Icons.copy_all),
-                          ),
-                          ListTile(
-                            onTap: () async {
-                              _bottomSheetController.close();
-                              final file = await FileSaver.writeFile(
-                                "${widget.event.timestamp?.millisecondsSinceEpoch}",
-                                textCopy,
-                              );
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Saved on : ${file.path}"),
-                                  action: SnackBarAction(
-                                    label: "open",
-                                    onPressed: () async {
-                                      await OpenFilex.open(file.path);
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                            title: Text("Save as file"),
-                            trailing: Icon(Icons.save_rounded),
                           ),
                         ],
                       ),
