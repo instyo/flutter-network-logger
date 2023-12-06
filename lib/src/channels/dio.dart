@@ -41,7 +41,7 @@ class DioNetworkLogger extends dio.Interceptor {
   }
 
   @override
-  void onError(dio.DioError err, dio.ErrorInterceptorHandler handler) {
+  void onError(dio.DioException err, dio.ErrorInterceptorHandler handler) {
     super.onError(err, handler);
     var event = _requests[err.requestOptions];
     if (event != null) {
@@ -83,9 +83,9 @@ extension _ResponseX on dio.Response {
       );
 }
 
-extension _DioErrorX on dio.DioError {
+extension _DioErrorX on dio.DioException {
   NetworkError toNetworkError() => NetworkError(
-        message: message,
+        message: message ?? 'Unknown error',
         data: response?.data,
         statusCode: response?.statusCode ?? 0,
         statusMessage: response?.statusMessage ?? "",

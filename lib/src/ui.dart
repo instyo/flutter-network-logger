@@ -46,13 +46,6 @@ class NetworkLoggerOverlay extends StatefulWidget {
     Future.delayed(Duration.zero, () {
       final overlay = Overlay.of(context, rootOverlay: rootOverlay);
 
-      if (overlay == null) {
-        throw Exception(
-          'FlutterNetworkLogger:  No Overlay widget found. '
-          '                       The most common way to add an Overlay to an application is to include a MaterialApp or Navigator above widget that calls NetworkLoggerOverlay.attachTo()',
-        );
-      }
-
       overlay.insert(entry);
     });
     // return

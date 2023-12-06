@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
-import 'package:path_provider/path_provider.dart';
 import 'network_event.dart';
 import 'network_logger.dart';
 
@@ -514,22 +511,5 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
         ),
       ],
     );
-  }
-}
-
-class FileSaver {
-  static Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-
-    return directory.path;
-  }
-
-  static Future<File> writeFile(String filename, String content) async {
-    final path = await _localPath;
-    final _localFile = File('$path/$filename.txt');
-    final file = await _localFile;
-
-    // Write the file
-    return file.writeAsString('$content');
   }
 }
