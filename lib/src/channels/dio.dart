@@ -1,25 +1,27 @@
 import 'package:dio/dio.dart' as dio;
 
-import '../network_event.dart';
-import '../network_logger.dart';
+import '../utils/network_event.dart';
+import '../utils/network_logger.dart';
 
 class DioNetworkLogger extends dio.Interceptor {
   final NetworkEventList eventList;
   final _requests = <dio.RequestOptions, NetworkEvent>{};
 
   DioNetworkLogger({NetworkEventList? eventList})
-      : this.eventList = eventList ?? NetworkLogger.instance;
+      : eventList = eventList ?? NetworkLogger.instance;
 
   @override
   Future<void> onRequest(
-      dio.RequestOptions options, dio.RequestInterceptorHandler handler) async {
+    dio.RequestOptions options,
+    dio.RequestInterceptorHandler handler,
+  ) async {
     super.onRequest(options, handler);
     eventList.add(_requests[options] = NetworkEvent.now(
       request: options.toRequest(),
       error: null,
       response: null,
     ));
-    return Future.value(options);
+    // return Future.value(options);
   }
 
   @override
@@ -28,15 +30,25 @@ class DioNetworkLogger extends dio.Interceptor {
     dio.ResponseInterceptorHandler handler,
   ) {
     super.onResponse(response, handler);
-    var event = _requests[response.requestOptions];
+    final event = _requests[response.requestOptions];
+    final timeRequest = DateTime.now()
+        .difference(event?.timestamp ?? DateTime.now())
+        .inMilliseconds;
     if (event != null) {
       _requests.remove(response.requestOptions);
-      eventList.updated(event..response = response.toResponse());
+
+      event.response = response.toResponse();
+      event.timeRequest = timeRequest;
+
+      eventList.updated(event);
     } else {
-      eventList.add(NetworkEvent.now(
-        request: response.requestOptions.toRequest(),
-        response: response.toResponse(),
-      ));
+      eventList.add(
+        NetworkEvent.now(
+          request: response.requestOptions.toRequest(),
+          response: response.toResponse(),
+          timeRequest: timeRequest,
+        ),
+      );
     }
   }
 

@@ -5,14 +5,26 @@ import 'package:intl/intl.dart';
 enum LogNetworkStatus { loading, success, error }
 
 class NetworkEvent {
-  NetworkEvent({this.request, this.response, this.error, this.timestamp});
-  NetworkEvent.now({this.request, this.response, this.error})
-      : this.timestamp = DateTime.now();
+  NetworkEvent({
+    this.request,
+    this.response,
+    this.error,
+    this.timestamp,
+    this.timeRequest,
+  });
+
+  NetworkEvent.now({
+    this.request,
+    this.response,
+    this.error,
+    this.timeRequest,
+  }) : timestamp = DateTime.now();
 
   Request? request;
   Response? response;
   NetworkError? error;
   DateTime? timestamp;
+  num? timeRequest;
 
   String get dateFormat =>
       DateFormat("dd LLLL yyyy HH:mm:ss").format(timestamp ?? DateTime.now());
@@ -26,10 +38,13 @@ class NetworkEvent {
 
 /// Used for storing [Request] and [Response] headers.
 class Headers {
-  Headers(Iterable<MapEntry<String, String>> entries)
-      : this.entries = entries.toList();
-  Headers.fromMap(Map<String, String> map)
-      : this.entries = map.entries as List<MapEntry<String, String>>;
+  Headers(
+    Iterable<MapEntry<String, String>> entries,
+  ) : entries = entries.toList();
+
+  Headers.fromMap(
+    Map<String, String> map,
+  ) : entries = map.entries as List<MapEntry<String, String>>;
 
   final List<MapEntry<String, String>> entries;
 
@@ -51,13 +66,6 @@ class Request {
     this.queryParameters,
     this.data,
   });
-
-  // final DateFormat dateFormat = DateFormat('yyyy-mm-dd HH:mm:ss');
-
-  // String get authorization => headers?['Authorization'] ?? '';
-
-  // String get date =>
-  //     dateFormat.format(DateTime.fromMillisecondsSinceEpoch(loggedAt));
 
   final String baseUrl;
   final String uri;

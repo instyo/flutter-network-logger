@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio_network_logger/src/utils/network_event.dart';
+import 'package:dio_network_logger/src/utils/network_logger.dart';
+import 'package:dio_network_logger/src/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
-import 'network_event.dart';
-import 'network_logger.dart';
 
-class UIDetail extends StatefulWidget {
+class RequestDetailScreen extends StatefulWidget {
   final NetworkEvent event;
 
   static Route<void> route({
@@ -17,7 +18,7 @@ class UIDetail extends StatefulWidget {
     return MaterialPageRoute(
       builder: (context) => StreamBuilder(
         stream: eventList.stream.where((item) => item.event == event),
-        builder: (context, snapshot) => UIDetail(event: event),
+        builder: (context, snapshot) => RequestDetailScreen(event: event),
       ),
     );
   }
@@ -34,59 +35,43 @@ class UIDetail extends StatefulWidget {
     ));
   }
 
-  const UIDetail({
-    Key? key,
+  const RequestDetailScreen({
+    super.key,
     required this.event,
-  }) : super(key: key);
+  });
 
   @override
-  State<UIDetail> createState() => _UIDetailState();
+  State<RequestDetailScreen> createState() => _RequestDetailScreenState();
 }
 
-class _UIDetailState extends State<UIDetail>
+class _RequestDetailScreenState extends State<RequestDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _index = 0;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   late PersistentBottomSheetController _bottomSheetController;
-
-  String textCopy = "";
-  final _jsonEncoder = JsonEncoder.withIndent('   ');
+  final _jsonEncoder = const JsonEncoder.withIndent('   ');
 
   dynamic encodeMap(dynamic data) => _jsonEncoder.convert(data);
 
-  Color getColor(String method) {
-    switch (method.toUpperCase()) {
-      case "GET":
-        return Colors.green;
-      case "POST":
-        return Colors.orange;
-      case "PUT":
-        return Colors.deepPurple;
-      case "DELETE":
-        return Colors.red;
-      default:
-        return Colors.black;
-    }
+  bool isValidJson(dynamic str) {
+    return str is Map || str is List;
+  }
+
+  String get textCopy {
+    return """
+Url : ${widget.event.request?.uri} \n
+Method : ${widget.event.request?.method} \n
+${widget.event.request?.headers != null ? '\nHeaders : \n${encodeMap(widget.event.request?.headers)}' : ''}
+${widget.event.request?.data != null ? '\nPayload : \n${encodeMap(widget.event.request?.data)}' : ''}
+${widget.event.response != null ? '\nResponse : \n${encodeMap(widget.event.response?.data)}' : ''}
+${widget.event.error != null ? '\nError : \n${encodeMap(widget.event.error?.data)}' : ''}
+""";
   }
 
   @override
   void initState() {
     super.initState();
-    textCopy = """
-Url : ${widget.event.request?.uri} \n
-
-Method : ${widget.event.request?.method} \n
-
-${widget.event.request?.headers != null ? '\nHeaders : \n' + encodeMap(widget.event.request?.headers) : ''}
-
-${widget.event.request?.data != null ? '\nPayload : \n' + encodeMap(widget.event.request?.data) : ''}
-
-${widget.event.response != null ? '\nResponse : \n' + encodeMap(widget.event.response?.data) : ''}
-
-${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.data) : ''}
-
-""";
 
     _tabController = TabController(
       initialIndex: _index,
@@ -101,6 +86,12 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -138,8 +129,8 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
                               _bottomSheetController.close();
                               await copyText(context, textCopy);
                             },
-                            title: Text("Copy as text"),
-                            trailing: Icon(Icons.copy_all),
+                            title: const Text("Copy as text"),
+                            trailing: const Icon(Icons.copy_all),
                           ),
                         ],
                       ),
@@ -147,7 +138,7 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
                   ),
                 );
               },
-              icon: Icon(Icons.share_outlined),
+              icon: const Icon(Icons.share_outlined),
             )
           ],
         ),
@@ -163,8 +154,7 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
                 },
                 leading: Container(
                   decoration: BoxDecoration(
-                    color: getColor(widget.event.request?.method ?? "")
-                        .withOpacity(.5),
+                    color: Utils.getMethodColor(widget.event.request?.method),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   padding: const EdgeInsets.symmetric(
@@ -178,23 +168,23 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
                 ),
                 title: Text(
                   widget.event.request?.uri ?? "-",
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
                   ),
                 ),
                 trailing: widget.event.status == LogNetworkStatus.loading
-                    ? CupertinoActivityIndicator()
+                    ? const CupertinoActivityIndicator()
                     : widget.event.status == LogNetworkStatus.success
-                        ? Icon(
+                        ? const Icon(
                             Icons.circle,
                             color: Colors.green,
-                            size: 18,
+                            size: 14,
                           )
-                        : Icon(
+                        : const Icon(
                             Icons.circle,
                             color: Colors.red,
-                            size: 18,
+                            size: 14,
                           ),
               ),
               TabBar(
@@ -287,7 +277,9 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
           height: 10,
         ),
         _buildCard(
-          child: JsonViewer(widget.event.request?.queryParameters),
+          child: isValidJson(widget.event.request?.queryParameters)
+              ? JsonViewer(widget.event.request?.queryParameters)
+              : Text('${widget.event.request?.queryParameters}'),
         ),
       ],
     );
@@ -303,7 +295,7 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
           toggleCode: token.isEmpty
               ? const SizedBox()
               : TextButton(
-                  child: Text("Copy Authorization"),
+                  child: const Text("Copy Authorization"),
                   onPressed: () async {
                     await copyText(
                       context,
@@ -319,7 +311,9 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
           },
         ),
         _buildCard(
-          child: JsonViewer(widget.event.request?.headers),
+          child: isValidJson(widget.event.request?.headers)
+              ? JsonViewer(widget.event.request?.headers)
+              : Text('${widget.event.request?.headers}'),
         ),
       ],
     );
@@ -343,7 +337,9 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
           },
         ),
         _buildCard(
-          child: JsonViewer(widget.event.request?.data),
+          child: isValidJson(widget.event.request?.data)
+              ? JsonViewer(widget.event.request?.data)
+              : Text('${widget.event.request?.data}'),
         ),
       ],
     );
@@ -454,7 +450,7 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
           child: SizedBox(
             width: double.maxFinite,
             child: Text(
-              'Status Code : $statusCode',
+              'Status Code : $statusCode\n\nRequest Time : ${widget.event.timeRequest} ms',
             ),
           ),
         ),
@@ -469,8 +465,9 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
         responseData.isEmpty
             ? const SizedBox()
             : _buildCard(
-                child: JsonViewer(responseData),
-              ),
+                child: isValidJson(responseData)
+                    ? JsonViewer(responseData)
+                    : Text('$responseData')),
       ],
     );
   }
@@ -506,7 +503,9 @@ ${widget.event.error != null ? '\nError : \n' + encodeMap(widget.event.error?.da
         _buildCard(
           child: SizedBox(
             width: double.maxFinite,
-            child: JsonViewer(widget.event.error?.data),
+            child: isValidJson(widget.event.error?.data)
+                ? JsonViewer(widget.event.error?.data)
+                : Text('${widget.event.error?.data}'),
           ),
         ),
       ],

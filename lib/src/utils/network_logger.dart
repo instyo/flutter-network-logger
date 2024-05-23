@@ -26,7 +26,7 @@ class NetworkEventList {
   /// Clear [events] and notify dependents.
   void clear() {
     events.clear();
-    _controller.add(UpdateEvent.clear());
+    _controller.add(const UpdateEvent.clear());
   }
 
   /// Dispose resources.
@@ -38,7 +38,7 @@ class NetworkEventList {
 /// Event notified by [NetworkEventList.stream].
 class UpdateEvent {
   const UpdateEvent(this.event);
-  const UpdateEvent.clear() : this.event = null;
+  const UpdateEvent.clear() : event = null;
 
   final NetworkEvent? event;
 }
