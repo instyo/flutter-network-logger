@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dio_network_logger/src/utils/network_event.dart';
-import 'package:dio_network_logger/src/utils/network_logger.dart';
-import 'package:dio_network_logger/src/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer/flutter_json_viewer.dart';
+import 'package:network_logger/dio_network_logger.dart';
+import 'package:network_logger/src/utils/network_event.dart';
+import 'package:network_logger/src/utils/utils.dart';
 
 class RequestDetailScreen extends StatefulWidget {
   final NetworkEvent event;

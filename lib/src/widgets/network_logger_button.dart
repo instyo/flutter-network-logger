@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'package:dio_network_logger/src/utils/network_logger.dart';
-import 'package:dio_network_logger/src/widgets/requests_list_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:network_logger/dio_network_logger.dart';
 
 /// [FloatingActionButton] that opens [NetworkLoggerScreen] when pressed.
 class NetworkLoggerButton extends StatefulWidget {

@@ -1,5 +1,5 @@
-import 'package:dio_network_logger/src/widgets/network_logger_button.dart';
 import 'package:flutter/material.dart';
+import 'package:network_logger/dio_network_logger.dart';
 
 class NetworkLoggerOverlay extends StatefulWidget {
   static const double _defaultPadding = 30;

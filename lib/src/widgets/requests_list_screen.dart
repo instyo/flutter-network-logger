@@ -1,9 +1,8 @@
-import 'package:dio_network_logger/src/utils/enumerate_items.dart';
-import 'package:dio_network_logger/src/utils/network_event.dart';
-import 'package:dio_network_logger/src/utils/network_logger.dart';
-import 'package:dio_network_logger/src/utils/utils.dart';
-import 'package:dio_network_logger/src/widgets/request_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:network_logger/dio_network_logger.dart';
+import 'package:network_logger/src/utils/enumerate_items.dart';
+import 'package:network_logger/src/utils/network_event.dart';
+import 'package:network_logger/src/utils/utils.dart';
 
 class RequestsListScreen extends StatefulWidget {
   final NetworkEventList eventList;
